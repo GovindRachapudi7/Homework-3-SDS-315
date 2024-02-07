@@ -1,0 +1,194 @@
+---
+title: "Homework 3 (SDS 315)"
+author: "Govind Rachapudi: gr25925"
+date: "2024-02-01"
+output: 
+---
+
+# Problem 1
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(tidyverse)
+creatine <- read.csv("creatinine.csv")
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+new_creatine <- creatine %>% 
+  arrange((age))
+
+model_creatinine <- lm(creatclear~age, data = creatine)
+#coef(model_creatinine)
+#equation = 148 - .6 x Age
+
+
+ggplot(new_creatine)+
+  geom_point(aes(x=age, y=creatclear))+
+  geom_smooth(aes(x=age,y=creatclear), method = 'lm')+
+  labs(title = "Regression Model of Creatinine clearance rate ", x = "Age", y = "Creatinine Clearance Rate") + 
+  theme_bw()
+  
+  
+```
+
+A)  The creatinine clearance rate for a 55 year old would be 115 ML/min. I solved this problem by utilizing the equation: (predicted creatinine clearance rate = 148 - 0.6 x age), in which The intercept is 147.8 and the age coefficient is -0.619.
+
+B)  The creatinine clearance rate changes with age when the equation y = 148 - 0.6x is taken into account. Initially the equation was (CCR = 148 - 0.6 x age) but this can easily be converted into a y intercept form equation to derive the slope. The rate of change is 0.6 ml/min and this slope is to be multiplied by age and subtracted from 148 ml/min which is the initial clearance rate.
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+forty = 148 - 0.6 * 40
+sixty = 148 - 0.6 * 60
+#cat("40 year old's CCR is: ", forty, "\n")
+#cat("60 year old's CCR is: ", sixty)
+```
+
+C)  A 40 year old with a clearance rate of 135 ml/min is healthy because the average 40 year old (according to the previous equation) has a clearance rate of 124 ml/min. A 60 year old with a clearance rate of 112 ml/min is average because the regression shows that an average 60 year old's CCR is indeed 112 ml/min.
+
+# Problem 2
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(dplyr)
+library(tidyverse)
+stocks <- read.csv("marketmodel.csv")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(kableExtra)
+library(knitr)
+apple <- lm(AAPL ~ SPY, data=stocks)
+google <- lm(GOOG ~ SPY, data=stocks)
+merck <- lm(MRK ~ SPY, data=stocks)
+johnson <- lm(JNJ ~ SPY, data=stocks)
+walmart <- lm(WMT ~SPY, data=stocks)
+target <- lm(TGT~SPY, data=stocks)
+
+
+AAPL <- data.frame(
+  Ticker = "AAPL",
+  Intercept = coef(apple)[1],
+  Slope = coef(apple)[2],
+  R2 = summary(apple)$r.squared
+)
+GOOG <- data.frame(
+  Ticker = "GOOG",
+  Intercept = coef(google)[1],
+  Slope = coef(google)[2],
+  R2 = summary(google)$r.squared
+)
+MRK <- data.frame(
+  Ticker = "MRK",
+  Intercept = coef(merck)[1],
+  Slope = coef(merck)[2],
+  R2 = summary(merck)$r.squared
+)
+JNJ <- data.frame(
+  Ticker = "JNJ",
+  Intercept = coef(johnson)[1],
+  Slope = coef(johnson)[2],
+  R2 = summary(johnson)$r.squared
+)
+WMT <- data.frame(
+  Ticker = "WMT",
+  Intercept = coef(walmart)[1],
+  Slope = coef(walmart)[2],
+  R2 = summary(walmart)$r.squared
+)
+TGT <- data.frame(
+  Ticker = "TGT",
+  Intercept = coef(target)[1],
+  Slope = coef(target)[2],
+  R2 = summary(target)$r.squared
+)
+
+merged_stocks <- bind_rows(AAPL, GOOG, MRK, JNJ, WMT, TGT)
+
+
+stock_table <- kable(merged_stocks, "html") %>%
+  kable_styling(full_width = FALSE) %>%
+  kable_material_dark()
+  
+  
+
+
+stock_table
+```
+
+Regression Results for Individual Stocks Against the S&P 500 returns. This table displays the intercept, beta (slope), and R- squared values obtained from the returns of notable individual stocks (Apple, Google, Merck, Johnson and Johnson, Walmart, and Target) against the returns of the S&P stock index (SPY).
+
+Beta is a metric that measures the level of volatility exhibited by an individual stock in relation to the broader market, usually represented by the S&P 500 index. A beta value of 1.0 signifies that the stock's returns move in sync with the market, while betas greater than 1.0 indicate higher volatility and increased risk. On the other hand, betas below 1.0 suggest lower volatility and potentially lower risk. Prominent stocks like Apple, Tesla, Nasdaq, Facebook, Nvidia, and Microsoft are often characterized by significant volatility due to fluctuations in demand and associated risks. Investing in these stocks can yield substantial rewards if timed correctly. Conversely, stocks such as Walmart, Johnson and Johnson, and Target tend to have betas below 1, indicating lower risk but potentially lower returns. It is worth noting that beta is generally a more reliable indicator of short-term performance rather than long-term performance. When making investment decisions, investors should take into account various factors beyond beta, including company fundamentals, market trends, and their own risk tolerance. In light of the analysis that I ran on these stocks, Walmart has the lowest risk associated with its stock because the beta is .519 (less than 1.) In contrast, Apple has the highest risk associated with its stock because the beta is 1.067 (greater than 1.)
+
+# Problem 3
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(tidyverse)
+covid <- read.csv("covid.csv")
+
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+italy <- covid %>% 
+  filter(country == "Italy") %>% 
+  select(deaths, days_since_first_death)
+
+spain <- covid %>% 
+  filter(country == "Spain") %>% 
+  select(deaths, days_since_first_death)
+
+
+#exponential model for italy
+lm_italy = lm(log(deaths) ~ days_since_first_death, data=italy)
+coef_italy <- coef(lm_italy)
+#model = 2.773e^.183t
+#growth rate = .183
+italy_growth_rate <- coef_italy[2]
+
+
+#exponential model for spain
+lm_spain = lm(log(spain$deaths) ~ days_since_first_death, data=spain)
+coef_spain <- coef(lm_spain)
+#model = 1.592e^.276t
+#growth rate = .276
+spain_growth_rate <- coef_spain[2]
+
+#doubling time 
+italy_double_time <- 70/(italy_growth_rate*100)
+#print(round(italy_double_time))
+spain_double_time <- 70/(spain_growth_rate*100)
+#print(round(spain_double_time))
+
+ggplot(covid) +
+  geom_line(aes(x = days_since_first_death, y = deaths, color = country))+
+  labs(title = "Model of Covid Deaths Over Time in Spain And Italy.",
+       x = "Days", y = "Deaths")+
+  theme_bw()
+  
+
+
+
+
+  
+```
+
+Italy - Growth Rate (.183), Doubling time (4 days)
+
+Spain - Growth Rate (.276), Doubling time (3 days)
+
+# Problem 4
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+milk <- read.csv("milk.csv")
+ggplot(milk)+
+  geom_point(aes(x = price, y = sales), alpha = 0.7)+ 
+  labs(title = "Relationship between Milk Price and Sales", 
+       x = "Price (in dollars)", y =
+       "Sales (in units)") + 
+  theme_bw()
+  
+
+milk_model <- lm(log(sales) ~ log(price), data = milk)
+coef(milk_model)
+#power law = 172.2x^-1.62
+
+
+```
+
+The estimated price elasticity of the demand of milk is about -1.62 which is 1.62% less on average what consumers want purchase. This relationship shows that as prices increase, less units are sold due to less demand on the commodity itself. This problem by fitting a linear model in the form of a power law. I took the log of both sales and price and fitted them together in which I calculated the intercept as 4.72 and the elasticity as -1.62. The power law model in this instance is 112.2x\^-1.62, K (base value) was calculated by e\^4.72.
